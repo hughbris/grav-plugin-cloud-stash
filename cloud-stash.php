@@ -103,6 +103,7 @@ class CloudStashPlugin extends Plugin
 		];
 		$twig->itemData = $form->getData(); // FIXME for default data.html template below - might work OK
 		$filename = $twig->processString($filename, $vars);
+		$foldername = pathinfo($filename,  PATHINFO_FILENAME); // TODO: not tested for filenames specified with filename parameter
 
 		$html = $twig->processString(array_key_exists('body', $params) ? $params['body'] : '{% include "forms/data.html.twig" %}', $vars);
 
@@ -111,7 +112,7 @@ class CloudStashPlugin extends Plugin
 		$snappy = new SnappyManager($this->grav);
 		$pdf = $snappy->servePDF([$html], $metadata);
 
-		// dump($params['provider']); exit;
+		// dump($foldername); exit;
 		// from AWS docs
 		// TODO: improve error handling, move this out to its own function/method - params: region, credentials, bucket, filename, filebody
 		// TODO: async?
@@ -130,7 +131,7 @@ class CloudStashPlugin extends Plugin
 		try {
 			$result = $s3Client->putObject([
 				'Bucket' => $bucket,
-				'Key' => $filename, // TODO: folder
+				'Key' => "{$foldername}/{$filename}",
 				'Body' => $pdf,
 			]);
 		}
