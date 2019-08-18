@@ -111,22 +111,25 @@ class CloudStashPlugin extends Plugin
 		$snappy = new SnappyManager($this->grav);
 		$pdf = $snappy->servePDF([$html], $metadata);
 
+		// dump($params['provider']); exit;
 		// from AWS docs
 		// TODO: improve error handling, move this out to its own function/method - params: region, credentials, bucket, filename, filebody
 		// TODO: async?
+		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED';
+		$stash_yaml_path = 'plugins.cloud-stash.stashes.AWS';
 		$s3Client = new S3Client([
 			'version'     => 'latest',
-			'region'      => 'ap-southeast-2', // TODO: $this->grav['config']->get('plugins.cloud-stash.text_var') etc
+			'region'      => $this->grav['config']->get("{$stash_yaml_path}.region"),
 			'credentials' => [
-				'key'    => 'YOUR_KEY',
-				'secret' => 'YOUR_SECRET',
+				'key'    => $this->grav['config']->get("{$stash_yaml_path}.key"),
+				'secret' => $this->grav['config']->get("{$stash_yaml_path}.secret"),
 			],
 		]);
 		// $client = $sdk->createS3();
 
 		try {
 			$result = $s3Client->putObject([
-				'Bucket' => 'YOUR.BUCKET.NAME',
+				'Bucket' => $bucket,
 				'Key' => $filename, // TODO: folder
 				'Body' => $pdf,
 			]);

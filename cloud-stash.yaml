@@ -1,2 +1,6 @@
 enabled: true
-text_var: Custom Text added by the **Cloud Stash** plugin (disable plugin to remove)
+stashes:
+  AWS:
+    region: 'AWS_BUCKET_REGION'
+    key: 'YOUR_KEY'
+    secret: 'YOUR_SECRET'
