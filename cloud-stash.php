@@ -5,6 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Grav\Common\Plugin;
 use RocketTheme\Toolbox\Event\Event;
+use RocketTheme\Toolbox\File\File;
 use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 use Aws\S3\Exception\S3Exception;
@@ -13,8 +14,7 @@ use Aws\S3\Exception\S3Exception;
  * Class CloudStashPlugin
  * @package Grav\Plugin
  */
-class CloudStashPlugin extends Plugin
-{
+class CloudStashPlugin extends Plugin {
 	/**
 	 * @return array
 	 *
@@ -25,8 +25,7 @@ class CloudStashPlugin extends Plugin
 	 *     callable (or function) as well as the priority. The
 	 *     higher the number the higher the priority.
 	 */
-	public static function getSubscribedEvents()
-	{
+	public static function getSubscribedEvents() {
 		return [
 			'onPluginsInitialized' => ['onPluginsInitialized', 0]
 		];
@@ -35,8 +34,7 @@ class CloudStashPlugin extends Plugin
 	/**
 	 * Initialize the plugin
 	 */
-	public function onPluginsInitialized()
-	{
+	public function onPluginsInitialized() {
 		// Don't proceed if we are in the admin plugin
 		if ($this->isAdmin()) {
 			return;
@@ -49,16 +47,14 @@ class CloudStashPlugin extends Plugin
 	}
 
 	/**
-	 * [onFormProcessed] Process a registration form. Handles the following actions:
+	 * [customFormActions] Process custom form actions defined in this plugin:
 	 *
-	 * - register_user: registers a user
-	 * - update_user: updates user profile
+	 * - stash_pdf: stash a PDF in the cloud
 	 *
 	 * @param Event $event
 	 * @throws \RuntimeException
 	 */
-	public function customFormActions(Event $event)
-	{
+	public function customFormActions(Event $event)	{
 		$form = $event['form'];
 		$action = $event['action'];
 
@@ -68,11 +64,11 @@ class CloudStashPlugin extends Plugin
 				$this->saveToStash($event);
 				break;
 		}
+		// TODO: save yaml
 	}
 
 	/**
-	 * Do some work for this event, full details of events can be found
-	 * on the learn site: http://learn.getgrav.org/plugins/event-hooks
+	 * Save PDF formatted data into a cloud stash
 	 *
 	 * @param Event $event
 	 */
@@ -97,13 +93,17 @@ class CloudStashPlugin extends Plugin
 		}
 		$filename = array_key_exists('filename', $params) ? $params['filename'] : prefix . $datestamp . $postfix . $ext;
 
+		$stash_attachments = array_key_exists('add_uploads', $params) ? $params['add_uploads'] : [];
+
 		$twig = $this->grav['twig'];
 		$vars = [
 			'form' => $form,
 		];
 		$twig->itemData = $form->getData(); // FIXME for default data.html template below - might work OK
 		$filename = $twig->processString($filename, $vars);
-		$foldername = pathinfo($filename,  PATHINFO_FILENAME); // TODO: not tested for filenames specified with filename parameter
+
+		$foldername = array_key_exists('foldername', $params) ? $params['foldername'] : pathinfo($filename,  PATHINFO_FILENAME) /* TODO: not tested for filenames specified with filename parameter */;
+		$foldername = $twig->processString($foldername, $vars);
 
 		$html = $twig->processString(array_key_exists('body', $params) ? $params['body'] : '{% include "forms/data.html.twig" %}', $vars);
 
@@ -116,7 +116,7 @@ class CloudStashPlugin extends Plugin
 		// from AWS docs
 		// TODO: improve error handling, move this out to its own function/method - params: region, credentials, bucket, filename, filebody
 		// TODO: async?
-		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED';
+		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED'; // the fallback
 		$stash_yaml_path = 'plugins.cloud-stash.stashes.AWS';
 		$s3Client = new S3Client([
 			'version'     => 'latest',
@@ -133,7 +133,65 @@ class CloudStashPlugin extends Plugin
 				'Bucket' => $bucket,
 				'Key' => "{$foldername}/{$filename}",
 				'Body' => $pdf,
+				'ContentType' => 'application/pdf',
 			]);
+
+			$form_values = $form->value()->toArray();
+			foreach ($stash_attachments as $field) {
+				if (array_key_exists($field, $form_values)) {
+					foreach($form_values[$field] as $upload) {
+						// dump($upload);
+						// $locator = $this->grav['locator'];
+						// $path = $locator->findResource(__DIR__ . "/{$upload['path']}", TRUE); // NOPE
+
+						// $file = File::instance(__DIR__ . "/{$upload['path']}"); // NOPE
+						$file = file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/{$upload['path']}");
+						// dump($upload); exit;
+
+						$result = $s3Client->putObject([
+							'Bucket' => $bucket,
+							'Key' => "{$foldername}/{$upload['name']}",
+							'Body' => $file,
+							'ContentType' => $upload['type'],
+						]);
+					}
+				}
+			}
+
+		// Get flash object in order to save the files.
+		/*
+		if (!empty($stash_attachments)) {
+			// Get flash object in order to save the files.
+			$flash = $form->getFlash();
+			dump($flash); exit;
+			$fields = $flash->getFilesByFields();
+			dump($flash); exit;
+
+
+			foreach ($fields as $key => $uploads) {
+				foreach ($uploads as $upload) {
+					if (null === $upload) {
+						continue;
+					}
+					$destination = $upload->getDestination();
+					$filesystem = Filesystem::getInstance();
+					$folder = $filesystem->dirname($destination);
+					if (!is_dir($folder) && !@mkdir($folder, 0777, true) && !is_dir($folder)) {
+						$grav = Grav::instance();
+						throw new \RuntimeException(sprintf($grav['language']->translate('PLUGIN_FORM.FILEUPLOAD_UNABLE_TO_MOVE', null, true), '"' . $upload->getClientFilename() . '"', $destination));
+					}
+					try {
+						$upload->moveTo($destination);
+					} catch (\RuntimeException $e) {
+						$grav = Grav::instance();
+						throw new \RuntimeException(sprintf($grav['language']->translate('PLUGIN_FORM.FILEUPLOAD_UNABLE_TO_MOVE', null, true), '"' . $upload->getClientFilename() . '"', $destination));
+					}
+				}
+			}
+			$flash->clearFiles();
+		}
+		// dump($form->value()->toArray()); exit;
+		*/
 		}
 		catch (S3Exception $e) {
 			// Catch an S3 specific exception.
