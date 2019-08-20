@@ -1,5 +1,13 @@
 {
     "require": {
         "aws/aws-sdk-php": "^3.109"
+    },
+    "autoload": {
+        "psr-4": {
+            "Grav\\Plugin\\CloudStash\\": "classes/"
+        },
+        "classmap": [
+            "cloud-stash.php"
+        ]
     }
 }

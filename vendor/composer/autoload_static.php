@@ -29,6 +29,7 @@ class ComposerStaticInit92ae9a9c1411fa899535c5a79962a8f9
             'GuzzleHttp\\Psr7\\' => 16,
             'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
+            'Grav\\Plugin\\CloudStash\\' => 23,
         ),
         'A' => 
         array (
@@ -57,10 +58,18 @@ class ComposerStaticInit92ae9a9c1411fa899535c5a79962a8f9
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
         ),
+        'Grav\\Plugin\\CloudStash\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/classes',
+        ),
         'Aws\\' => 
         array (
             0 => __DIR__ . '/..' . '/aws/aws-sdk-php/src',
         ),
+    );
+
+    public static $classMap = array (
+        'Grav\\Plugin\\CloudStashPlugin' => __DIR__ . '/../..' . '/cloud-stash.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -68,6 +77,7 @@ class ComposerStaticInit92ae9a9c1411fa899535c5a79962a8f9
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit92ae9a9c1411fa899535c5a79962a8f9::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit92ae9a9c1411fa899535c5a79962a8f9::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit92ae9a9c1411fa899535c5a79962a8f9::$classMap;
 
         }, null, ClassLoader::class);
     }

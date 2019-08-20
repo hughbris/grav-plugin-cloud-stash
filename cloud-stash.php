@@ -6,9 +6,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Grav\Common\Plugin;
 use RocketTheme\Toolbox\Event\Event;
 use RocketTheme\Toolbox\File\File;
-use Aws\S3\S3Client;
-use Aws\Exception\AwsException;
-use Aws\S3\Exception\S3Exception;
 
 /**
  * Class CloudStashPlugin
@@ -112,52 +109,35 @@ class CloudStashPlugin extends Plugin {
 		$snappy = new SnappyManager($this->grav);
 		$pdf = $snappy->servePDF([$html], $metadata);
 
-		// dump($foldername); exit;
-		// from AWS docs
-		// TODO: improve error handling, move this out to its own function/method - params: region, credentials, bucket, filename, filebody
-		// TODO: async?
-		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED'; // the fallback
-		$stash_yaml_path = 'plugins.cloud-stash.stashes.AWS';
-		$s3Client = new S3Client([
-			'version'     => 'latest',
-			'region'      => $this->grav['config']->get("{$stash_yaml_path}.region"),
-			'credentials' => [
-				'key'    => $this->grav['config']->get("{$stash_yaml_path}.key"),
-				'secret' => $this->grav['config']->get("{$stash_yaml_path}.secret"),
-			],
-		]);
-		// $client = $sdk->createS3();
+		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED'; // the fallback should present user with an explanatory message on failure, implying the problem of no bucket name specified
 
-		try {
-			$result = $s3Client->putObject([
-				'Bucket' => $bucket,
-				'Key' => "{$foldername}/{$filename}",
-				'Body' => $pdf,
-				'ContentType' => 'application/pdf',
-			]);
+		$client = new CloudStash\S3Provider();
 
-			$form_values = $form->value()->toArray();
-			foreach ($stash_attachments as $field) {
-				if (array_key_exists($field, $form_values)) {
-					foreach($form_values[$field] as $upload) {
-						// dump($upload);
-						// $locator = $this->grav['locator'];
-						// $path = $locator->findResource(__DIR__ . "/{$upload['path']}", TRUE); // NOPE
+		// see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-s3-2006-03-01.html#putobject for more put params - 'Metadata'?
+		$client->stash($bucket, "{$foldername}/{$filename}", $pdf, array(
+			'ContentType' => 'application/pdf',
+			));
 
-						// $file = File::instance(__DIR__ . "/{$upload['path']}"); // NOPE
-						$file = file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/{$upload['path']}");
-						// dump($upload); exit;
+		$form_values = $form->value()->toArray();
+		foreach ($stash_attachments as $field) { // TODO: see below for FormFlash method when installed Form plugin reaches v3
+			if (array_key_exists($field, $form_values)) {
+				foreach($form_values[$field] as $upload) {
+					// dump($upload);
+					// $locator = $this->grav['locator'];
+					// $path = $locator->findResource(__DIR__ . "/{$upload['path']}", TRUE); // NOPE
 
-						$result = $s3Client->putObject([
-							'Bucket' => $bucket,
-							'Key' => "{$foldername}/{$upload['name']}",
-							'Body' => $file,
-							'ContentType' => $upload['type'],
-						]);
-					}
+					// $file = File::instance(__DIR__ . "/{$upload['path']}"); // NOPE
+					$upload_contents = file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/{$upload['path']}");
+					// dump($upload); exit;
+
+					$client->stash($bucket, "{$foldername}/{$upload['name']}", $upload_contents, array(
+						'ContentType' => $upload['type'],
+						));
 				}
 			}
+		}
 
+		// FormFlash method for Form plugin >=v3
 		// Get flash object in order to save the files.
 		/*
 		if (!empty($stash_attachments)) {
@@ -192,24 +172,6 @@ class CloudStashPlugin extends Plugin {
 		}
 		// dump($form->value()->toArray()); exit;
 		*/
-		}
-		catch (S3Exception $e) {
-			// Catch an S3 specific exception.
-			echo 'S3Exception<br>';
-			echo $e->getMessage();
-		}
-		catch (AwsException $e) {
-			// This catches the more generic AwsException. You can grab information
-			// from the exception using methods of the exception object.
-			echo 'AwsException<br>';
-			echo $e->getAwsRequestId() . "\n";
-			echo $e->getAwsErrorType() . "\n";
-			echo $e->getAwsErrorCode() . "\n";
-
-			// This dumps any modeled response data, if supported by the service
-			// Specific members can be accessed directly (e.g. $e['MemberName'])
-			var_dump($e->toArray());
-		}
 
 	}
 
