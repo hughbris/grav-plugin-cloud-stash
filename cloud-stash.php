@@ -4,6 +4,7 @@ namespace Grav\Plugin;
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Grav\Common\Plugin;
+use \Grav\Common\Utils;
 use RocketTheme\Toolbox\Event\Event;
 use RocketTheme\Toolbox\File\File;
 
@@ -55,13 +56,18 @@ class CloudStashPlugin extends Plugin {
 		$form = $event['form'];
 		$action = $event['action'];
 
-		// saveFormPDF custom action
+		// stash custom action
 		switch ($action) {
-			case 'stash_pdf':
+			case 'stash':
 				$this->saveToStash($event);
 				break;
 		}
-		// TODO: save yaml
+		// stash PDF custom action
+		switch ($action) {
+			case 'stash_pdf':
+				$this->saveToStash($event, TRUE);
+				break;
+		}
 	}
 
 	/**
@@ -69,7 +75,7 @@ class CloudStashPlugin extends Plugin {
 	 *
 	 * @param Event $event
 	 */
-	public function saveToStash(Event $event) {
+	public function saveToStash(Event $event, $asPDF=FALSE) {
 
 		$form = $event['form'];
 		$params = $event['params'];
@@ -77,7 +83,7 @@ class CloudStashPlugin extends Plugin {
 		$prefix = array_key_exists('fileprefix', $params) ? $params['fileprefix'] : '';
 		$format = array_key_exists('dateformat', $params) ? $params['dateformat'] : 'Ymd-His-u';
 		$postfix = array_key_exists('filepostfix', $params) ? $params['filepostfix'] : '';
-		$ext = '.pdf';
+		$ext = $asPDF ? '.pdf' : (array_key_exists('extension', $params) ? $params['extension'] : '.txt');
 
 		if (array_key_exists('dateraw', $params) AND (bool) $params['dateraw']) {
 			$datestamp = date($format);
@@ -98,25 +104,31 @@ class CloudStashPlugin extends Plugin {
 		];
 		$twig->itemData = $form->getData(); // FIXME for default data.html template below - might work OK
 		$filename = $twig->processString($filename, $vars);
+		$content_type = Utils::getMimeByFilename($filename, NULL);
 
 		$foldername = array_key_exists('foldername', $params) ? $params['foldername'] : pathinfo($filename,  PATHINFO_FILENAME) /* TODO: not tested for filenames specified with filename parameter */;
 		$foldername = $twig->processString($foldername, $vars);
 
-		$html = $twig->processString(array_key_exists('body', $params) ? $params['body'] : '{% include "forms/data.html.twig" %}', $vars);
+		$contents = $twig->processString(array_key_exists('body', $params) ? $params['body'] : '{% include "forms/data.html.twig" %}', $vars);
 
 		$metadata = $this->extractMetadata($form->getData());
+		$stash_options = [];
 
-		$snappy = new SnappyManager($this->grav);
-		$pdf = $snappy->servePDF([$html], $metadata);
+		if ($asPDF) {
+			$snappy = new SnappyManager($this->grav);
+			$contents = $snappy->servePDF([$contents], $metadata);
+			$stash_options['ContentType'] = 'application/pdf';
+		}
+		elseif(!is_null($content_type)) {
+			$stash_options['ContentType'] = $content_type;
+		}
 
 		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED'; // the fallback should present user with an explanatory message on failure, implying the problem of no bucket name specified
 
 		$client = new CloudStash\S3Provider();
 
 		// see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-s3-2006-03-01.html#putobject for more put params - 'Metadata'?
-		$client->stash($bucket, "{$foldername}/{$filename}", $pdf, array(
-			'ContentType' => 'application/pdf',
-			));
+		$client->stash($bucket, "{$foldername}/{$filename}", $contents, $stash_options);
 
 		$form_values = $form->value()->toArray();
 		foreach ($stash_attachments as $field) { // TODO: see below for FormFlash method when installed Form plugin reaches v3
