@@ -5,13 +5,10 @@ use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 use Aws\S3\Exception\S3Exception;
 
-class S3Provider {
-	private $settings;
-	public $client;
-	private $grav;
+class S3Provider extends Provider {
 
 	public function __construct() {
-		$this->grav = \Grav\Common\Grav::instance();
+		parent::__construct();
 		$this->settings = $this->grav['config']->get('plugins.cloud-stash.stashes.AWS');
 
 		$this->client = new S3Client([
