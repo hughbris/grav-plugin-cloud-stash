@@ -133,6 +133,8 @@ As per the `stash` action except that `extension` will be ignored and set to ".p
 
 This plugin makes use of a bunch of wonderful open source software and requires the [Snappygrav plugin](https://github.com/iusvar/grav-plugin-snappygrav) to produce PDFs for uploading/stashing.
 
+Many thanks to [Matt Marsh (@marshmn)](https://github.com/marshmn) and [@robertorubioguardia](https://github.com/robertorubioguardia) for S3 advice and mentoring.
+
 _TODO: more credits_
 
 ## To Do
