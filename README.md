@@ -14,6 +14,16 @@ This could be handy for:
 
 Installing the Cloud Stash plugin can be done in one of three ways: The GPM (Grav Package Manager) installation method lets you quickly install the plugin with a simple terminal command, the manual method lets you do so via a zip file, and the admin method lets you do so via the Admin Plugin.
 
+### Dependencies
+
+This plugin requires the [Form plugin](https://github.com/getgrav/grav-plugin-form) to provide anything useful.
+
+The [Snappygrav plugin](https://github.com/iusvar/grav-plugin-snappygrav) (>= v1.9.1) is also listed as a dependency, though you won't strictly need this if you don't need to stash PDF documents.
+
+_If you use this plugin without producing PDFs_ (Snappygrav), you could install it manually according to the instructions below.
+
+> Note that Snappygrav requires you to either [install or make sure you have a PDF creation library available](https://github.com/iusvar/grav-plugin-snappygrav#requirements) on your server.
+
 ### GPM Installation (Preferred)
 
 To install the plugin via the [GPM](http://learn.getgrav.org/advanced/grav-gpm), through your system's terminal (also called the command line), navigate to the root of your Grav-installation, and enter:
@@ -121,7 +131,7 @@ As per the `stash` action except that `extension` will be ignored and set to ".p
 
 ## Credits
 
-This plugin makes use of a bunch of wonderful open source software and requires the [Snappygrav plugin](https://github.com/iusvar/grav-plugin-snappygrav) to produce PDFs for uploading/stashing. _TODO: I should probably list that as a dependency._
+This plugin makes use of a bunch of wonderful open source software and requires the [Snappygrav plugin](https://github.com/iusvar/grav-plugin-snappygrav) to produce PDFs for uploading/stashing.
 
 _TODO: more credits_
 

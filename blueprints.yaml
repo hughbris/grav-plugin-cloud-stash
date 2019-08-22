@@ -12,6 +12,10 @@ bugs: https://github.com/hughbris/grav-plugin-cloud-stash/issues
 docs: https://github.com/hughbris/grav-plugin-cloud-stash/blob/develop/README.md
 license: MIT
 
+dependencies:
+  - { name: "form" }
+  - { name: "snappygrav", version: ">=1.9.1" }
+
 form:
   validation: strict
   fields:
