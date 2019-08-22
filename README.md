@@ -65,7 +65,7 @@ The plugin defines **two new [form actions](https://learn.getgrav.org/16/forms/f
 * **`stash`** saves a form data file, and optionally [file field attachments](https://learn.getgrav.org/16/forms/forms/fields-available#file-field) uploaded through the form, to a remote storage location that you specify.
 * **`stash_pdf`** saves a formatted PDF file based on form input, and optionally [file fields](https://learn.getgrav.org/16/forms/forms/fields-available#file-field) uploaded through the form, to a remote storage location that you specify.
 
-> If you use both of these actions, you probably only want to specify that file fields be saved as part of one of them. If you specify any field twice, its attachment will be overwritten. This is mostly harmless except for the extra traffic and time taken.
+> If you use both of these actions, you probably only want to specify that file fields be stashed in one of those actions. If you specify any field twice, its attachment will be overwritten. This is mostly harmless except for the extra traffic and time taken.
 
 ### `stash` action
 
@@ -77,7 +77,7 @@ Just like the 'save' action, if you omit the `body` parameter, your output will 
 
 `bucket` is S3-specific (AWS) and may be deprecated for a more provider-agnostic term in the near future. It specifies the name of the S3 bucket into which you want to stash your form data.
 
-`add_uploads` is a YAML list of [file field](https://learn.getgrav.org/16/forms/forms/fields-available#file-field) names from the form, which indicate that you would like those files to be uploaded to the remote stash as well.
+`add_uploads` is a YAML list of [file field](https://learn.getgrav.org/16/forms/forms/fields-available#file-field) names from the form, which indicates that you would like those files to be uploaded to the remote stash as well.
 
 `operation` is _not_ supported and is ignored. Documents/objects are always _created_.
 
@@ -127,6 +127,6 @@ _TODO: more credits_
 
 ## To Do
 
-[Respository issues](issues). _FIXME_
+The most important TODOs have been added as [repository issues](https://github.com/hughbris/grav-plugin-cloud-stash/issues) for now. _FIXME_
 
 > [Dropbox](https://dropbox.com) support is _not_ a priority because it doesn't support write-only permissions, despite its name. It may, however, have value for its ability to provide seamless mount points to the user's local file system.
