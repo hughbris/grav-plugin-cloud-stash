@@ -1,13 +1,13 @@
 name: Cloud Stash
-version: 0.1.0
+version: 0.1.0-pre
 description: Stash your users' form data in a secure cloud repository
 icon: plug
 author:
   name: Hugh Barnes
   email: dev@hubns.com
 homepage: https://github.com/hughbris/grav-plugin-cloud-stash
-demo: http://demo.yoursite.com
-keywords: grav, plugin, etc
+# demo: http://demo.yoursite.com
+keywords: aws, s3, forms, secure storage, cloud storage, pdf
 bugs: https://github.com/hughbris/grav-plugin-cloud-stash/issues
 docs: https://github.com/hughbris/grav-plugin-cloud-stash/blob/develop/README.md
 license: MIT
@@ -25,7 +25,3 @@ form:
         0: PLUGIN_ADMIN.DISABLED
       validate:
         type: bool
-    text_var:
-      type: text
-      label: PLUGIN_CLOUD_STASH.TEXT_VARIABLE
-      help: PLUGIN_CLOUD_STASH.TEXT_VARIABLE_HELP
