@@ -29,3 +29,24 @@ form:
         0: PLUGIN_ADMIN.DISABLED
       validate:
         type: bool
+
+    stashes:
+      type: section
+      title: Stashes
+      fields:
+        AWS:
+          type: section
+          title: AWS
+          fields:
+            stashes.AWS.region:
+              type: text
+              label: Bucket Region
+              placeholder: 'AWS_BUCKET_REGION'
+            stashes.AWS.key:
+              type: text
+              label: Key
+              placeholder: 'YOUR_KEY'
+            stashes.AWS.secret:
+              type: password
+              label: Secret
+              placeholder: YOUR_SECRET
