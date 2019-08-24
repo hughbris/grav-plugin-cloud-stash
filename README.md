@@ -56,13 +56,13 @@ Here is the default configuration and an explanation of available options:
 enabled: true
 stashes:
   AWS:
-    region: 'AWS_BUCKET_REGION'
-    key: 'YOUR_KEY'
-    secret: 'YOUR_SECRET'
+    region: ''                  # AWS BUCKET REGION
+    key: ''                     # AWS KEY
+    secret: ''                  # AWS PASSWORD
 ```
 
 * **enabled** toggles the plugin on and off
-* **stashes** holds information about the cloud storage provider services you have set up and want to make available. It has been populated with dummy data. _Presently only the AWS S3 provider is supported._
+* **stashes** holds information about the cloud storage provider services you have set up and want to make available. _Presently only the AWS S3 provider is supported._
 
 Note that if you use the Admin Plugin, a file with your configuration named cloud-stash.yaml will be saved in the `user/config/plugins/`-folder once the configuration is saved in the Admin.
 
