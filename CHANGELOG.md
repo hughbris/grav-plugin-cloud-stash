@@ -1,5 +1,5 @@
 # v0.1.0
-##  08/15/2019
+##  21-09-2021
 
-1. [](#new)
-    * ChangeLog started...
+1. [](#improved)
+    * Support for other S3-compatible stash services (#7)

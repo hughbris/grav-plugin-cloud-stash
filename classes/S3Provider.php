@@ -7,18 +7,26 @@ use Aws\S3\Exception\S3Exception;
 
 class S3Provider extends Provider {
 
-	public function __construct() {
+	public function __construct($stash='AWS') {
 		parent::__construct();
-		$this->settings = $this->grav['config']->get('plugins.cloud-stash.stashes.AWS');
+		$this->settings = $this->grav['config']->get("plugins.cloud-stash.stashes.{$stash}");
 
-		$this->client = new S3Client([
+		$client_options = [
 			'version'     => 'latest',
 			'region'      => $this->settings['region'],
 			'credentials' => [
 				'key'    => $this->settings['key'],
 				'secret' => $this->settings['secret'],
 			],
-		]);
+		];
+
+		// thanks to https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html
+		if (array_key_exists('domain', $this->settings)) {
+			$client_options['endpoint'] = "https://{$this->settings['region']}.{$this->settings['domain']}";
+			$client_options['use_path_style_endpoint'] = true;
+		}
+
+		$this->client = new S3Client($client_options);
 		// $client = $sdk->createS3();
 	}
 
