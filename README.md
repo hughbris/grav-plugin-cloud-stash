@@ -88,7 +88,7 @@ Just like the 'save' action, if you omit the `body` parameter, your output will 
 
 `stash` specifies the stash name as configured under `stashes` in this plugin's configuration.
 
-`provider` _**deprecated** for `stash`, will be interpreted as per `stash` if provided in lieu of `stash`._
+`provider` _**deprecated** for `stash`, will be interpreted as `stash` if provided in lieu of `stash`. It's ignored if you provide it as well._
 
 `bucket` is S3-specific and may be deprecated for a more service-agnostic term in the near future. It specifies the name of the S3-compatible bucket into which you want to stash your form data.
 
