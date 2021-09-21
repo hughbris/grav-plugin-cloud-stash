@@ -59,16 +59,19 @@ stashes:
     region: ''                  # AWS BUCKET REGION
     key: ''                     # AWS KEY
     secret: ''                  # AWS PASSWORD
+    # domain:                   # e.g. 'backblazeb2.com' for Backblaze B2 (see https://www.backblaze.com/b2/docs/s3_compatible_api.html and below)
+                                # e.g. 'linodeobjects.com' for Linode Object Storage stashes
 ```
 
 * **enabled** toggles the plugin on and off
-* **stashes** holds information about the cloud storage provider services you have set up and want to make available. _Presently only the AWS S3 provider is supported._
+* **stashes** holds information about the cloud storage provider services you have set up and want to make available. _Presently only some AWS S3 API-compatible providers are supported._
+* **domain** for some S3-compatible API providers like [Minio](https://min.io) servers, [Backblaze B2 Cloud Storage](https://www.backblaze.com/b2/cloud-storage.html), and [Linode Object Storage](https://www.linode.com/products/object-storage/), you need to [specify an endpoint domain](https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html) for concatenating to the region hostname so that your S3-compatible API calls use "path-style endpoints" and the API calls work correctly.
 
 Note that if you use the Admin Plugin, a file with your configuration named cloud-stash.yaml will be saved in the `user/config/plugins/`-folder once the configuration is saved in the Admin.
 
 ## Usage
 
-At present the plugin only supports [Amazon Web Services S3](https://docs.aws.amazon.com/s3/index.html) [buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/Introduction.html#BasicsBucket), but has been developed to facilitate adding support for extra providers.
+At present the plugin only supports [Amazon Web Services S3](https://docs.aws.amazon.com/s3/index.html) [buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/Introduction.html#BasicsBucket) and S3-compatible API service buckets/objects, but has been developed to facilitate adding support for other service providers.
 
 The plugin defines **two new [form actions](https://learn.getgrav.org/16/forms/forms/reference-form-actions)** for [Grav forms](https://github.com/getgrav/grav-plugin-form). Place these as required under the `process` form YAML property.
 
@@ -83,9 +86,11 @@ The parameters `fileprefix`, `filepostfix`, `dateformat`, `dateraw`, `filename`,
 
 Just like the 'save' action, if you omit the `body` parameter, your output will be formatted using the 'forms/data.html.twig' template from your theme, Form plugin, or other location in your Twig path.
 
-`provider` specifies the provider of the cloud storage service and currently must be 'AWS' (S3).
+`stash` specifies the stash name as configured under `stashes` in this plugin's configuration.
 
-`bucket` is S3-specific (AWS) and may be deprecated for a more provider-agnostic term in the near future. It specifies the name of the S3 bucket into which you want to stash your form data.
+`provider` _**deprecated** for `stash`, will be interpreted as per `stash` if provided in lieu of `stash`._
+
+`bucket` is S3-specific and may be deprecated for a more service-agnostic term in the near future. It specifies the name of the S3-compatible bucket into which you want to stash your form data.
 
 `add_uploads` is a YAML list of [file field](https://learn.getgrav.org/16/forms/forms/fields-available#file-field) names from the form, which indicates that you would like those files to be uploaded to the remote stash as well.
 
@@ -102,7 +107,7 @@ Just like the 'save' action, if you omit the `body` parameter, your output will 
             foldername: "{{ form.value['timestamp']|date('Ymd-His') ~ '-' ~ form.value['respondent-name']|e|split(' ')|last|lower }}"
             extension: yaml
             body: "{% include 'forms/data.txt.twig' %}"
-            provider: AWS
+            stash: AWS # old property 'provider' still supported, don't use it though
             bucket: MY.BUCKET.NAME
             add_uploads:
                 - attachments
@@ -124,7 +129,7 @@ As per the `stash` action except that `extension` will be ignored and set to ".p
             filename: "{{ 'application-' ~ form.value['timestamp']|date('Ymd-His') ~ '-' ~ form.value['applicant-name']|e|split(' ')|last|lower ~ '.pdf' }}"
             foldername: "{{ form.value['timestamp']|date('Ymd-His') ~ '-' ~ form.value['applicant-name']|e|split(' ')|last|lower }}"
             body: "{% include 'forms/application-print.html.twig' %}"
-            provider: AWS
+            stash: B2 # old property 'provider' still supported, don't use it though
             bucket: MY.BUCKET.NAME
         …
 ```
