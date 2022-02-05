@@ -123,9 +123,11 @@ class CloudStashPlugin extends Plugin {
 			$stash_options['ContentType'] = $content_type;
 		}
 
-		$bucket = $params['bucket'] ? $params['bucket'] : 'BUCKET_NOT_SPECIFIED'; // the fallback should present user with an explanatory message on failure, implying the problem of no bucket name specified
-
 		$stash = $params['stash'] ?: $params['provider'];
+		$stash_config = $this->config->plugins['cloud-stash']['stashes'][$stash];
+
+		$bucket = array_key_exists('bucket', $params) ? $params['bucket'] : $stash_config['defaults']['target']; // TODO: raise an exception here if neither of these are provided
+
 		$client = new CloudStash\S3Provider($stash);
 
 		// see https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-s3-2006-03-01.html#putobject for more put params - 'Metadata'?

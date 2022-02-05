@@ -61,11 +61,14 @@ stashes:
     secret: ''                  # AWS PASSWORD
     # domain:                   # e.g. 'backblazeb2.com' for Backblaze B2 (see https://www.backblaze.com/b2/docs/s3_compatible_api.html and below)
                                 # e.g. 'linodeobjects.com' for Linode Object Storage stashes
+    # defaults:
+    #  target: 'fave-bucket'
 ```
 
 * **enabled** toggles the plugin on and off
 * **stashes** holds information about the cloud storage provider services you have set up and want to make available. _Presently only some AWS S3 API-compatible providers are supported._
 * **domain** for some S3-compatible API providers like [Minio](https://min.io) servers, [Backblaze B2 Cloud Storage](https://www.backblaze.com/b2/cloud-storage.html), and [Linode Object Storage](https://www.linode.com/products/object-storage/), you need to [specify an endpoint domain](https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html) for concatenating to the region hostname so that your S3-compatible API calls use "path-style endpoints" and the API calls work correctly.
+* **defaults.target** the default bucket to write to if one is not explicitly specified as a `bucket` parameter. _This allows different bucket targets per environment without needing to vary the form's YAML, so .. useful!_
 
 Note that if you use the Admin Plugin, a file with your configuration named cloud-stash.yaml will be saved in the `user/config/plugins/`-folder once the configuration is saved in the Admin.
 

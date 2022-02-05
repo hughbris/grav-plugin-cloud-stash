@@ -1,6 +1,10 @@
 enabled: true
+disable_admin: true
 stashes:
   AWS:
     region: ''                  # AWS BUCKET REGION
     key: ''                     # AWS KEY
     secret: ''                  # AWS PASSWORD
+    # domain:
+    # defaults:
+    #  target: 'fave-bucket'
