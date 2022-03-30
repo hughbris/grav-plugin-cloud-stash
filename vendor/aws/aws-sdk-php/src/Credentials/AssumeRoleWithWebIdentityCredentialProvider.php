@@ -1,6 +1,7 @@
 <?php
 namespace Aws\Credentials;
 
+use Aws\Exception\AwsException;
 use Aws\Exception\CredentialsException;
 use Aws\Result;
 use Aws\Sts\StsClient;
@@ -13,6 +14,7 @@ use GuzzleHttp\Promise;
 class AssumeRoleWithWebIdentityCredentialProvider
 {
     const ERROR_MSG = "Missing required 'AssumeRoleWithWebIdentityCredentialProvider' configuration option: ";
+    const ENV_RETRIES = 'AWS_METADATA_SERVICE_NUM_ATTEMPTS';
 
     /** @var string */
     private $tokenFile;
@@ -30,7 +32,10 @@ class AssumeRoleWithWebIdentityCredentialProvider
     private $retries;
 
     /** @var integer */
-    private $attempts;
+    private $authenticationAttempts;
+
+    /** @var integer */
+    private $tokenFileReadAttempts;
 
     /**
      * The constructor attempts to load config from environment variables.
@@ -58,19 +63,24 @@ class AssumeRoleWithWebIdentityCredentialProvider
             throw new \InvalidArgumentException("'WebIdentityTokenFile' must be an absolute path.");
         }
 
-        $this->retries = isset($config['retries']) ? $config['retries'] : 3;
-        $this->attempts = 0;
+        $this->retries = (int) getenv(self::ENV_RETRIES) ?: (isset($config['retries']) ? $config['retries'] : 3);
+        $this->authenticationAttempts = 0;
+        $this->tokenFileReadAttempts = 0;
 
         $this->session = isset($config['SessionName'])
             ? $config['SessionName']
             : 'aws-sdk-php-' . round(microtime(true) * 1000);
+
+        $region = isset($config['region'])
+            ? $config['region']
+            : 'us-east-1';
 
         if (isset($config['client'])) {
             $this->client = $config['client'];
         } else {
             $this->client = new StsClient([
                 'credentials' => false,
-                'region' => 'us-east-1',
+                'region' => $region,
                 'version' => 'latest'
             ]);
         }
@@ -83,12 +93,33 @@ class AssumeRoleWithWebIdentityCredentialProvider
      */
     public function __invoke()
     {
-        return Promise\coroutine(function () {
+        return Promise\Coroutine::of(function () {
             $client = $this->client;
             $result = null;
             while ($result == null) {
                 try {
-                    $token = file_get_contents($this->tokenFile);
+                    $token = @is_readable($this->tokenFile)
+                        ? file_get_contents($this->tokenFile)
+                        : false;
+                    if (false === $token) {
+                        clearstatcache(true, dirname($this->tokenFile) . "/" . readlink($this->tokenFile));
+                        clearstatcache(true, dirname($this->tokenFile) . "/" . dirname(readlink($this->tokenFile)));
+                        clearstatcache(true, $this->tokenFile);
+                        if (!@is_readable($this->tokenFile)) {
+                            throw new CredentialsException(
+                                "Unreadable tokenfile at location {$this->tokenFile}"
+                            );
+                        }
+                        $token = file_get_contents($this->tokenFile);
+                    }
+                    if (empty($token)) {
+                        if ($this->tokenFileReadAttempts < $this->retries) {
+                            sleep(pow(1.2, $this->tokenFileReadAttempts));
+                            $this->tokenFileReadAttempts++;
+                            continue;
+                        }
+                        throw new CredentialsException("InvalidIdentityToken from file: {$this->tokenFile}");
+                    }
                 } catch (\Exception $exception) {
                     throw new CredentialsException(
                         "Error reading WebIdentityTokenFile from " . $this->tokenFile,
@@ -105,10 +136,10 @@ class AssumeRoleWithWebIdentityCredentialProvider
 
                 try {
                     $result = $client->assumeRoleWithWebIdentity($assumeParams);
-                } catch (\Exception $e) {
+                } catch (AwsException $e) {
                     if ($e->getAwsErrorCode() == 'InvalidIdentityToken') {
-                        if ($this->attempts < $this->retries) {
-                            sleep(pow(1.2, $this->attempts));
+                        if ($this->authenticationAttempts < $this->retries) {
+                            sleep(pow(1.2, $this->authenticationAttempts));
                         } else {
                             throw new CredentialsException(
                                 "InvalidIdentityToken, retries exhausted"
@@ -121,8 +152,13 @@ class AssumeRoleWithWebIdentityCredentialProvider
                             $e
                         );
                     }
+                } catch (\Exception $e) {
+                    throw new CredentialsException(
+                        "Error retrieving web identity credentials: " . $e->getMessage()
+                        . " (" . $e->getCode() . ")"
+                    );
                 }
-                $this->attempts++;
+                $this->authenticationAttempts++;
             }
 
             yield $this->client->createCredentials($result);
