@@ -21,6 +21,7 @@ class S3Provider extends Provider {
 		];
 
 		// thanks to https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html
+		// and thanks to their marketing people for redirecting that to their generic Kubernetes docs, try https://web.archive.org/web/20200419175913/https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html now - PLEASE DO NOT *NOT* REDIRECT DOCUMENTATION
 		if (array_key_exists('domain', $this->settings)) {
 			$client_options['endpoint'] = "https://{$this->settings['region']}.{$this->settings['domain']}";
 			$client_options['use_path_style_endpoint'] = true;

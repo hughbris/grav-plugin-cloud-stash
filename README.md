@@ -14,7 +14,11 @@ This could be handy for:
 
 Installing the Cloud Stash plugin can be done in one of three ways: The GPM (Grav Package Manager) installation method lets you quickly install the plugin with a simple terminal command, the manual method lets you do so via a zip file, and the admin method lets you do so via the Admin Plugin.
 
+> After following one of the download steps described below, **you need to run `composer install` at the command line from the plugin directory.** This installs the PHP libraries needed by this plugin. Be sure to run this, if possible, _as the same user that Grav runs as_, otherwise you may need to fix the file permissions of this plugin's `vendor` directory.
+
 ### Dependencies
+
+_See the note above about installing PHP libraries._
 
 This plugin requires the [Form plugin](https://github.com/getgrav/grav-plugin-form) to provide anything useful.
 
