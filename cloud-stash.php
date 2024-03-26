@@ -142,8 +142,8 @@ class CloudStashPlugin extends Plugin {
 					// $path = $locator->findResource(__DIR__ . "/{$upload['path']}", TRUE); // NOPE
 
 					// $file = File::instance(__DIR__ . "/{$upload['path']}"); // NOPE
-					$upload_contents = file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/{$upload['path']}");
-					// dump($upload); exit;
+					$filePath = Utils::fullPath($upload['path']);
+					$upload_contents = file_get_contents($filePath);
 
 					$client->stash($bucket, "{$foldername}/{$upload['name']}", $upload_contents, array(
 						'ContentType' => $upload['type'],
