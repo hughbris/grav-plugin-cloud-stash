@@ -42,16 +42,19 @@ class S3Provider extends Provider {
 			], $object_params);
 
 		try {
+			$this->grav['log']->info("[cloud-stash]: stashing $object_name to $bucket");
 			$result = $this->client->putObject($putParams);
 		}
 		catch (S3Exception $e) {
 			// Catch an S3 specific exception.
+			$this->grav['log']->error("[cloud-stash]: S3Exception-> {$e->getMessage()}");
 			echo 'S3Exception<br>';
 			echo $e->getMessage();
 		}
 		catch (AwsException $e) {
 			// This catches the more generic AwsException. You can grab information
 			// from the exception using methods of the exception object.
+			$this->grav['log']->error("[cloud-stash]: AwsException-> {$e->getAwsErrorCode()}");
 			echo 'AwsException<br>';
 			echo $e->getAwsRequestId() . "\n";
 			echo $e->getAwsErrorType() . "\n";
@@ -61,6 +64,12 @@ class S3Provider extends Provider {
 			// Specific members can be accessed directly (e.g. $e['MemberName'])
 			var_dump($e->toArray());
 		}
+		catch (Exception $e) {
+			$this->grav['log']->error("[cloud-stash]: Exception-> " . json_encode($e->toArray()));
+			echo 'Exception<br>';
+			var_dump($e->toArray());
+		}
+		$this->grav['log']->debug("[cloud-stash]: putObject result-> " . json_encode($result->toArray()));
 		return $result;
 	}
 }
