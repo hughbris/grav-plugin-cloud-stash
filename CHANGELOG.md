@@ -9,3 +9,12 @@
 
 1. [](#fixed)
     * Forgotten merge of aforepromised features
+
+# v0.2.0
+##  18-12-2023
+
+1. [](#improved)
+    * Remove vendor directory and require `composer install`
+1. [] (#bugfix)
+    * Pin "psr/http-message" to "^1.0" for Grav core compat
+    * Remove unneeded "google/apiclient" package

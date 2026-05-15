@@ -21,6 +21,7 @@ class S3Provider extends Provider {
 		];
 
 		// thanks to https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html
+		// and thanks to their marketing people for redirecting that to their generic Kubernetes docs, try https://web.archive.org/web/20200419175913/https://docs.min.io/docs/how-to-use-aws-sdk-for-php-with-minio-server.html now - PLEASE DO NOT *NOT* REDIRECT DOCUMENTATION
 		if (array_key_exists('domain', $this->settings)) {
 			$client_options['endpoint'] = "https://{$this->settings['region']}.{$this->settings['domain']}";
 			$client_options['use_path_style_endpoint'] = true;
@@ -41,16 +42,19 @@ class S3Provider extends Provider {
 			], $object_params);
 
 		try {
+			$this->grav['log']->info("[cloud-stash]: stashing $object_name to $bucket");
 			$result = $this->client->putObject($putParams);
 		}
 		catch (S3Exception $e) {
 			// Catch an S3 specific exception.
+			$this->grav['log']->error("[cloud-stash]: S3Exception-> {$e->getMessage()}");
 			echo 'S3Exception<br>';
 			echo $e->getMessage();
 		}
 		catch (AwsException $e) {
 			// This catches the more generic AwsException. You can grab information
 			// from the exception using methods of the exception object.
+			$this->grav['log']->error("[cloud-stash]: AwsException-> {$e->getAwsErrorCode()}");
 			echo 'AwsException<br>';
 			echo $e->getAwsRequestId() . "\n";
 			echo $e->getAwsErrorType() . "\n";
@@ -60,6 +64,12 @@ class S3Provider extends Provider {
 			// Specific members can be accessed directly (e.g. $e['MemberName'])
 			var_dump($e->toArray());
 		}
+		catch (Exception $e) {
+			$this->grav['log']->error("[cloud-stash]: Exception-> " . json_encode($e->toArray()));
+			echo 'Exception<br>';
+			var_dump($e->toArray());
+		}
+		$this->grav['log']->debug("[cloud-stash]: putObject result-> " . json_encode($result->toArray()));
 		return $result;
 	}
 }
