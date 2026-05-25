@@ -7,7 +7,7 @@ author:
   email: dev@hubns.com
 homepage: https://github.com/hughbris/grav-plugin-cloud-stash
 # demo: http://demo.yoursite.com
-keywords: aws, s3, forms, secure storage, cloud storage, pdf
+keywords: aws, s3, forms, secure storage, cloud storage, pdf, b2 backblaze
 bugs: https://github.com/hughbris/grav-plugin-cloud-stash/issues
 docs: https://github.com/hughbris/grav-plugin-cloud-stash/blob/develop/README.md
 license: MIT
